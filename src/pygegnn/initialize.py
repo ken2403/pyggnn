@@ -1,3 +1,5 @@
+from typing import Optional
+
 import torch
 from torch import Tensor
 import torch.nn as nn
@@ -9,8 +11,10 @@ class AtomicNum2Node(nn.Embedding):
     def __init__(
         self,
         embedding_dim: int,
-        max_num: int = 100,
+        max_num: Optional[int] = None,
     ):
+        if max_num is None:
+            max_num = 100
         super().__init__(
             num_embeddings=max_num, embedding_dim=embedding_dim, padding_idx=0
         )

@@ -14,7 +14,7 @@ def swish(x: Tensor, beta: Tensor) -> Tensor:
 
 
 class Swish(nn.Module):
-    def __init__(self, beta: Optional[float] = None) -> None:
+    def __init__(self, beta: Optional[float] = None):
         """
         Activation function of Swish which reported on ref[1].
 
