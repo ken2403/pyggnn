@@ -7,8 +7,8 @@ from torch_geometric.nn.conv import MessagePassing
 from torch_geometric.typing import Adj
 
 from pygegnn import DataKeys
-from .swish import Swish
-from .base import Dense
+from pygegnn.swish import Swish
+from pygegnn.base import Dense
 
 
 __all__ = ["EGNNConv"]

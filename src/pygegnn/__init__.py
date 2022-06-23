@@ -1,10 +1,10 @@
-from .base import *
-from .conv import *
-from .egnn import *
-from .initialize import *
-from .out import *
-from .swish import *
-from .egnn import EGNN
+from pygegnn.base import *
+from pygegnn.conv import *
+from pygegnn.egnn import *
+from pygegnn.initialize import *
+from pygegnn.out import *
+from pygegnn.swish import *
+from pygegnn.egnn import EGNN
 
 __all__ = ["DataKeys"]
 

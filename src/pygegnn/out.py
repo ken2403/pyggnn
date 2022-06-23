@@ -5,8 +5,8 @@ import torch.nn as nn
 from torch_geometric.nn import global_add_pool, global_mean_pool
 
 from pygegnn import DataKeys
-from .base import Dense
-from .swish import Swish
+from pygegnn.base import Dense
+from pygegnn.swish import Swish
 
 __all__ = ["Node2Property"]
 
