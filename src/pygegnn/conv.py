@@ -6,6 +6,7 @@ import torch.nn as nn
 from torch_geometric.nn.conv import MessagePassing
 from torch_geometric.typing import Adj
 
+from pygegnn import DataKeys
 from .swish import Swish
 from .base import Dense
 
@@ -113,9 +114,9 @@ class EGNNConv(MessagePassing):
         if edge_attr_dim is None:
             edge_attr_dim = 0
         if node_hidden is None:
-            node_hidden = x_dim[1] * 2
+            node_hidden = DataKeys.Hidden_layer
         if edge_hidden is None:
-            edge_hidden = edge_dim * 2
+            edge_hidden = DataKeys.Hidden_layer
         if residual:
             assert x_dim[0] == x_dim[1]
 

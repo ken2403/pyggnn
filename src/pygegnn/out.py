@@ -4,6 +4,7 @@ from torch import Tensor
 import torch.nn as nn
 from torch_geometric.nn import global_add_pool, global_mean_pool
 
+from pygegnn import DataKeys
 from .base import Dense
 from .swish import Swish
 
@@ -14,7 +15,7 @@ class Node2Property(nn.Module):
     def __init__(
         self,
         in_dim: int,
-        hidden_dim: int = 128,
+        hidden_dim: int = DataKeys.Hidden_layer,
         out_dim: int = 1,
         beta: Optional[float] = None,
         aggr: Literal["add", "mean"] = "add",
