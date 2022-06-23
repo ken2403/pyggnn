@@ -1,1 +1,1 @@
-# egnn-pyg
+# EGNN-PyG
