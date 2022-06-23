@@ -3,6 +3,7 @@ from typing import Optional
 import torch
 from torch import Tensor
 import torch.nn as nn
+from einops import rearrange
 
 __all__ = ["AtomicNum2Node", "Distance2GaussianEdge"]
 
@@ -15,12 +16,11 @@ class AtomicNum2Node(nn.Embedding):
     ):
         if max_num is None:
             max_num = 100
-        super().__init__(
-            num_embeddings=max_num, embedding_dim=embedding_dim, padding_idx=0
-        )
+        super().__init__(num_embeddings=max_num, embedding_dim=embedding_dim)
 
     def forward(self, x: Tensor) -> Tensor:
-        return super().forward(x)
+        x = super().forward(x)
+        return rearrange(x, "b n e->b(n e)")
 
 
 def gaussian_filter(
