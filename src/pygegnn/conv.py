@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch_geometric.nn.conv import MessagePassing
 from torch_geometric.typing import Adj
 
-from pygegnn import DataKeys
+from pygegnn.data import DataKeys
 from pygegnn.swish import Swish
 from pygegnn.base import Dense
 

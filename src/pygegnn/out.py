@@ -4,7 +4,7 @@ from torch import Tensor
 import torch.nn as nn
 from torch_geometric.nn import global_add_pool, global_mean_pool
 
-from pygegnn import DataKeys
+from pygegnn.data import DataKeys
 from pygegnn.base import Dense
 from pygegnn.swish import Swish
 
