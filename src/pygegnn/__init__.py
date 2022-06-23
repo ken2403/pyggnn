@@ -4,6 +4,7 @@ from .egnn import *
 from .initialize import *
 from .out import *
 from .swish import *
+from .egnn import EGNN
 
 __all__ = ["DataKeys"]
 

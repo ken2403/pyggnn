@@ -11,6 +11,8 @@ from pygegnn import (
     Node2Property,
 )
 
+__all__ = ["EGNN"]
+
 
 class EGNN(nn.Module):
     def __init__(
