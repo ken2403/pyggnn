@@ -135,7 +135,7 @@ class EGNNConv(MessagePassing):
         )
         self.node_update = nn.ModuleList(
             [
-                Dense(node_dim + edge_dim, node_hidden, bias=True),
+                Dense(node_dim[0] + edge_dim, node_hidden, bias=True),
                 Swish(beta),
                 Dense(node_hidden, node_dim[1], bias=True),
             ]
