@@ -141,7 +141,9 @@ class EGNNConv(MessagePassing):
             ]
         )
         # inferring the edge
-        self.inf = Dense(edge_dim, 1, bias=True, activation=F.sigmoid)
+        self.inf = Dense(
+            edge_dim, 1, bias=True, activation=F.sigmoid, activation_name="sigmoid"
+        )
         if batch_norm:
             self.bn = nn.BatchNorm1d(node_dim[1])
         else:
