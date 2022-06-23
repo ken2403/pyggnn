@@ -3,7 +3,6 @@ from typing import Tuple, Union, Optional
 import torch
 from torch import Tensor
 import torch.nn as nn
-import torch.nn.functional as F
 from torch_geometric.nn.conv import MessagePassing
 from torch_geometric.typing import Adj
 
@@ -18,7 +17,7 @@ __all__ = ["EGNNConv"]
 #     def __init__(
 #         self,
 #         channels: Union[int, Tuple[int, int]],
-#         node_dim: int,
+#         x_dim: int,
 #         hidden_dim: Optional[float] = None,
 #         beta: Optional[float] = None,
 #         residual: bool = True,
@@ -26,7 +25,7 @@ __all__ = ["EGNNConv"]
 #     ):
 #         super().__init__()
 #         self.channels = channels
-#         self.node_dim = node_dim
+#         self.x_dim = x_dim
 #         self.hidden_dim = hidden_dim
 #         self.beta = beta
 #         self.residual = residual
@@ -42,7 +41,7 @@ __all__ = ["EGNNConv"]
 #         # updata function
 #         self.layers = nn.ModuleList(
 #             [
-#                 Dense(sum(channels) + node_dim, hidden_dim, bias=True),
+#                 Dense(sum(channels) + x_dim, hidden_dim, bias=True),
 #                 Swish(beta),
 #                 Dense(hidden_dim, channels[1], bias=True),
 #                 Swish(beta),
@@ -88,7 +87,7 @@ __all__ = ["EGNNConv"]
 class EGNNConv(MessagePassing):
     def __init__(
         self,
-        node_dim: Union[int, Tuple[int, int]],
+        x_dim: Union[int, Tuple[int, int]],
         edge_dim: int,
         edge_attr_dim: Optional[int] = None,
         node_hidden: Optional[int] = None,
@@ -100,7 +99,7 @@ class EGNNConv(MessagePassing):
         **kwargs,
     ):
         super().__init__(aggr=aggr, **kwargs)
-        self.node_dim = node_dim
+        self.x_dim = x_dim
         self.edge_dim = edge_dim
         self.edge_attr_dim = edge_attr_dim
         self.node_hidden = node_hidden
@@ -109,22 +108,22 @@ class EGNNConv(MessagePassing):
         self.residual = residual
         self.batch_norm = batch_norm
 
-        if isinstance(node_dim, int):
-            node_dim = (node_dim, node_dim)
+        if isinstance(x_dim, int):
+            x_dim = (x_dim, x_dim)
         if edge_attr_dim is None:
             edge_attr_dim = 0
         if node_hidden is None:
-            node_hidden = node_dim[1] * 2
+            node_hidden = x_dim[1] * 2
         if edge_hidden is None:
             edge_hidden = edge_dim * 2
         if residual:
-            assert node_dim[0] == node_dim[1]
+            assert x_dim[0] == x_dim[1]
 
         # updata function
-        self.edge_update = nn.ModuleList(
+        self.edge_func = nn.ModuleList(
             [
                 Dense(
-                    node_dim[0] * 2 + edge_dim + 1 + edge_attr_dim,
+                    x_dim[0] * 2 + 1 + edge_attr_dim,
                     edge_hidden,
                     bias=True,
                 ),
@@ -133,52 +132,52 @@ class EGNNConv(MessagePassing):
                 Swish(beta),
             ]
         )
-        self.node_update = nn.ModuleList(
+        self.node_func = nn.ModuleList(
             [
-                Dense(node_dim[0] + edge_dim, node_hidden, bias=True),
+                Dense(x_dim[0] + edge_dim, node_hidden, bias=True),
                 Swish(beta),
-                Dense(node_hidden, node_dim[1], bias=True),
+                Dense(node_hidden, x_dim[1], bias=True),
             ]
         )
         # inferring the edge
         self.inf = Dense(
-            edge_dim, 1, bias=True, activation=F.sigmoid, activation_name="sigmoid"
+            edge_dim, 1, bias=True, activation=torch.sigmoid, activation_name="sigmoid"
         )
         if batch_norm:
-            self.bn = nn.BatchNorm1d(node_dim[1])
+            self.bn = nn.BatchNorm1d(x_dim[1])
         else:
             self.bn = nn.Identity()
 
     def reset_parameters(self):
-        for nu in self.node_update:
-            nu.reset_parameters()
-        for eu in self.edge_update:
-            eu.reset_parameters()
+        for ef in self.edge_func:
+            ef.reset_parameters()
+        for nf in self.node_func:
+            nf.reset_parameters()
         self.inf.reset_parameters()
         self.bn.reset_parameters()
 
     def forward(
         self,
-        node: Tensor,
+        x: Tensor,
         dist: Tensor,
         edge_index: Adj,
         edge_attr: Optional[Tensor] = None,
     ) -> Tensor:
         # propagate_type:
-        # (node: Tensor, dist: Tensor, edge_attr: Optional[Tensor])
+        # (x: Tensor, dist: Tensor, edge_attr: Optional[Tensor])
         edge = self.propagate(
             edge_index,
-            x=node,
+            x=x,
             dist=dist,
             edge_attr=edge_attr,
             size=None,
         )
-        node_new = torch.cat([node, edge], dim=-1)
-        for nu in self.node_update:
-            node_new = nu(node_new)
-        node_new = self.bn(node_new)
-        node_new = node_new + node if self.residual else node_new
-        return node_new
+        out = torch.cat([x, edge], dim=-1)
+        for nf in self.node_func:
+            out = nf(out)
+        out = self.bn(out)
+        out = out + x if self.residual else out
+        return out
 
     def message(
         self,
@@ -189,12 +188,12 @@ class EGNNConv(MessagePassing):
     ) -> Tensor:
         # update edge
         if edge_attr is None:
-            edge_new = torch.cat([x_i, x_j, dist], dim=-1)
+            edge_new = torch.cat([x_i, x_j, dist.unsqueeze(-1)], dim=-1)
         else:
             assert edge_attr.size[-1] == self.edge_attr_dim
-            edge_new = torch.cat([x_i, x_j, dist, edge_attr], dim=-1)
-        for eu in self.edge_update:
-            edge_new = eu(edge_new)
+            edge_new = torch.cat([x_i, x_j, dist.unsqueeze(-1), edge_attr], dim=-1)
+        for ef in self.edge_func:
+            edge_new = ef(edge_new)
 
         # get inferring weight
         edge_new = self.inf(edge_new) * edge_new
