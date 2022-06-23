@@ -18,7 +18,7 @@ class Dense(nn.Linear):
         activation_name: Optional[str] = None,
         weight_init: Callable[[Tensor], Tensor] = nn.init.xavier_normal_,
         bias_init: Callable[[Tensor], Tensor] = nn.init.zeros_,
-    ) -> None:
+    ):
         """
          Applies a linear transformation to the incoming data, and if activation is
          not None, apply activation function after linear transformation.
@@ -27,14 +27,14 @@ class Dense(nn.Linear):
         Args:
             in_d (int): input dimension of tensor.
             out_d (int): output dimension of tensor.
-            bias (bool, optional: if False, the layer will not return an additive bias.
-                Defaults to True.
+            bias (bool, optional): if `False`, the layer will not return an
+                additive bias. Defaults to `True`.
             activation (Callable or None, optional): activation fucnction after
                 calculating linear layer. Defaults to None.
-            activation_name (str or None, optional): lower case of activation fucntion
-                name. Defaults to None.
-            weight_init (Callable, optional: Defaults to nn.init.xavier_normal_.
-            bias_init (Callable, optional): Defaults to nn.init.zeros_.
+            activation_name (str or `None`, optional): lower case of activation fucntion
+                name. Defaults to `None`.
+            weight_init (Callable, optional: Defaults to `nn.init.xavier_normal_`.
+            bias_init (Callable, optional): Defaults to `nn.init.zeros_`.
         """
         self.activation = activation
         if self.activation is not None:

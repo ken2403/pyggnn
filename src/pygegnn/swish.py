@@ -16,16 +16,17 @@ def swish(x: Tensor, beta: Tensor) -> Tensor:
 class Swish(nn.Module):
     def __init__(self, beta: Optional[float] = None) -> None:
         """
-
         Activation function of Swish which reported on ref[1].
-        ref:
-        [1] P. Ramachandran et al., arXiv [cs.NE] (2017),
-            (available at http://arxiv.org/abs/1710.05941).
-        [2] V. G. Satorras et al., arXiv [cs.LG] (2021),
-            (available at http://arxiv.org/abs/2102.09844).
 
         Args:
-            beta (float, optional): Coefficent of beta value. Defaults to None.
+            beta (float, optional): Coefficent of beta value. Defaults to `None`.
+
+        Notes:
+            reference:
+            [1] P. Ramachandran et al., arXiv [cs.NE] (2017),
+                (available at http://arxiv.org/abs/1710.05941).
+            [2] V. G. Satorras et al., arXiv [cs.LG] (2021),
+                (available at http://arxiv.org/abs/2102.09844).
         """
         super().__init__()
         self.beta = beta
