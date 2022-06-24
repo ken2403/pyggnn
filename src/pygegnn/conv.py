@@ -6,8 +6,7 @@ import torch.nn as nn
 from torch_geometric.nn.conv import MessagePassing
 from torch_geometric.typing import Adj
 
-from pygegnn.data import DataKeys
-from pygegnn.swish import Swish
+from pygegnn.activation import Swish
 from pygegnn.base import Dense
 
 
@@ -86,19 +85,43 @@ __all__ = ["EGNNConv"]
 
 
 class EGNNConv(MessagePassing):
+    """
+    The block to calculate massage passing and update node embeddings.
+    It is implemented in the manner of PyTorch Geometric.
+    """
+
     def __init__(
         self,
         x_dim: Union[int, Tuple[int, int]],
         edge_dim: int,
         edge_attr_dim: Optional[int] = None,
-        node_hidden: Optional[int] = None,
-        edge_hidden: Optional[int] = None,
+        node_hidden: int = 128,
+        edge_hidden: int = 128,
         beta: Optional[float] = None,
         residual: bool = True,
         batch_norm: bool = True,
         aggr: Optional[str] = "add",
         **kwargs,
     ):
+        """
+        Args:
+            x_dim (int or Tuple[int, int]]): number of node dimnsion. if set to tuple
+                object, the first one is input dim, and second one is output dim.
+            edge_dim (int): number of edge dim.
+            edge_attr_dim (int or `None`, optional): number of another edge
+                attribute dim.
+                Defaults to `None`.
+            node_hidden (int, optional): dimension of node hidden layers.
+                Defaults to `128`.
+            edge_hidden (int, optional): dimension of edge hidden layers.
+                Defaults to `128`.
+            beta (float or None, optional): beta coeff. Defaults to `None`.
+            residual (bool, optional): if set to `False`, no residual network is used.
+                Defaults to `True`.
+            batch_norm (bool, optional): if set to `False`, no batch normalization is
+                used. Defaults to `True`.
+            aggr (str, optional): aggregation method. Defaults to `"add"`.
+        """
         super().__init__(aggr=aggr, **kwargs)
         self.x_dim = x_dim
         self.edge_dim = edge_dim
@@ -113,10 +136,6 @@ class EGNNConv(MessagePassing):
             x_dim = (x_dim, x_dim)
         if edge_attr_dim is None:
             edge_attr_dim = 0
-        if node_hidden is None:
-            node_hidden = DataKeys.Hidden_layer
-        if edge_hidden is None:
-            edge_hidden = DataKeys.Hidden_layer
         if residual:
             assert x_dim[0] == x_dim[1]
 

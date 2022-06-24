@@ -3,10 +3,9 @@ __all__ = ["DataKeys"]
 
 class DataKeys:
     # data key name
-    X = "x"
-    Edge_index = "edge_index"
     Batch = "batch"
     Ptr = "ptr"
+    Edge_index = "edge_index"
     Position = "pos"
     Atomic_num = "atomic_num"
     Lattice = "lattice"
@@ -14,5 +13,3 @@ class DataKeys:
     Edge_attr = "edge_attr"
     Energy = "energy"
     Forces = "forces"
-    # model settings
-    Hidden_layer = 128
