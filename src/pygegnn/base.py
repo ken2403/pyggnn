@@ -9,6 +9,12 @@ __all__ = ["Dense"]
 
 
 class Dense(nn.Linear):
+    """
+    Applies a linear transformation to the incoming data, and if activation is not None,
+    apply activation function after linear transformation. And using weight initialize
+    method.
+    """
+
     def __init__(
         self,
         in_d: int,
@@ -20,17 +26,13 @@ class Dense(nn.Linear):
         bias_init: Callable[[Tensor], Tensor] = nn.init.zeros_,
     ):
         """
-         Applies a linear transformation to the incoming data, and if activation is
-         not None, apply activation function after linear transformation.
-         And using weight initialize method.
-
         Args:
             in_d (int): input dimension of tensor.
             out_d (int): output dimension of tensor.
             bias (bool, optional): if `False`, the layer will not return an
                 additive bias. Defaults to `True`.
             activation (Callable or None, optional): activation fucnction after
-                calculating linear layer. Defaults to None.
+                calculating linear layer. Defaults to `None`.
             activation_name (str or `None`, optional): lower case of activation fucntion
                 name. Defaults to `None`.
             weight_init (Callable, optional: Defaults to `nn.init.xavier_normal_`.
@@ -48,9 +50,6 @@ class Dense(nn.Linear):
         super().__init__(in_d, out_d, bias)
 
     def reset_parameters(self):
-        """
-        Reinitialize model weight and bias values.
-        """
         self.weight_init(
             self.weight, gain=torch.nn.init.calculate_gain(self.activation_name)
         )

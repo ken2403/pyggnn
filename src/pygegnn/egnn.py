@@ -13,23 +13,35 @@ __all__ = ["EGNN"]
 
 
 class EGNN(nn.Module):
+    """
+    EGNN implemeted by using PyTorch Geometric.
+    From atomic structure, predict global property such as total energy.
+
+    Notes:
+        PyTorch Geometric:
+        https://pytorch-geometric.readthedocs.io/en/latest/
+
+        EGNN:
+        [1] V. G. Satorras et al., arXiv (2021),
+            (available at http://arxiv.org/abs/2102.09844).
+        [2] https://e3nn.org/
+    """
+
     def __init__(
         self,
         node_dim: int,
         edge_dim: int,
         n_conv_layer: int,
         out_dim: int = 1,
-        hidden_dim: int = DataKeys.Hidden_layer,
+        hidden_dim: int = 128,
         aggr: Literal["add", "mean"] = "add",
         residual: bool = True,
         edge_attr_dim: Optional[int] = None,
         share_weight: bool = False,
         swish_beta: Optional[float] = 1.0,
-        max_z: Optional[int] = None,
+        max_z: Optional[int] = 100,
     ):
         """
-        EGNN implemeted by using PytTorchGeomtry.
-
         Args:
             node_dim (int): number of node embedding dim.
             edge_dim (int): number of edge embedding dim.
@@ -37,7 +49,7 @@ class EGNN(nn.Module):
             out_dim (int, optional): number of output property dimension.
                 Defaults to `1`.
             hidden_dim (int, optional): number of hidden layers.
-                Defaults to `DataKeys.Hidden_layer`.
+                Defaults to `128`.
             aggr (`"add"` or `"mean"`, optional): if set to `"add"`, sumaggregation
                 is done along node dimension. Defaults to `"add"`.
             residual (bool, optional): if `False`, no residual network.
@@ -48,10 +60,11 @@ class EGNN(nn.Module):
                 share the parameters. Defaults to `False`.
             swish_beta (float, optional): beta coefficient of Swish activation func.
                 Defaults to `1.0`.
-            max_z (int, optional): max number of atomic number. Defaults to `None`.
+            max_z (int, optional): max number of atomic number. Defaults to `100`.
         """
         super().__init__()
         self.node_initialize = AtomicNum2Node(embedding_dim=node_dim, max_num=max_z)
+
         if share_weight:
             self.convs = nn.ModuleList(
                 [
@@ -84,6 +97,7 @@ class EGNN(nn.Module):
                     for _ in range(n_conv_layer)
                 ]
             )
+
         self.output = Node2Property(
             in_dim=node_dim,
             hidden_dim=hidden_dim,
@@ -118,7 +132,7 @@ class EGNN(nn.Module):
         atomic_numbers = data_batch[DataKeys.Atomic_num]
         edge_index = data_batch[DataKeys.Edge_index]
         edge_attr = data_batch.get(DataKeys.Edge_attr, None)
-        # calc distances
+        # calc atomic distances
         distances = self.calc_atomic_distances(data_batch)
         # initial embedding
         x = self.node_initialize(atomic_numbers)

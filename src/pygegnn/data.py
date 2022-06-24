@@ -14,5 +14,3 @@ class DataKeys:
     Edge_attr = "edge_attr"
     Energy = "energy"
     Forces = "forces"
-    # model settings
-    Hidden_layer = 128
