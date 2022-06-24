@@ -24,7 +24,7 @@ class EGNN(nn.Module):
         EGNN:
         [1] V. G. Satorras et al., arXiv (2021),
             (available at http://arxiv.org/abs/2102.09844).
-        [2] https://e3nn.org/
+        [2] https://docs.e3nn.org/en/stable/index.html
     """
 
     def __init__(
