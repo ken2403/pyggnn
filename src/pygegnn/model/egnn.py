@@ -5,9 +5,9 @@ import torch.nn as nn
 from torch import Tensor
 
 from pygegnn.data import DataKeys
-from pygegnn.initialize import AtomicNum2Node
-from pygegnn.conv import EGNNConv
-from pygegnn.out import Node2Property
+from pygegnn.nn.initialize import AtomicNum2Node
+from pygegnn.nn.conv import EGNNConv
+from pygegnn.nn.out import Node2Property
 
 __all__ = ["EGNN"]
 
@@ -33,9 +33,10 @@ class EGNN(nn.Module):
         edge_dim: int,
         n_conv_layer: int,
         out_dim: int = 1,
-        hidden_dim: int = 128,
+        hidden_dim: int = 256,
         aggr: Literal["add", "mean"] = "add",
         residual: bool = True,
+        batch_norm: bool = False,
         edge_attr_dim: Optional[int] = None,
         share_weight: bool = False,
         swish_beta: Optional[float] = 1.0,
@@ -49,11 +50,13 @@ class EGNN(nn.Module):
             out_dim (int, optional): number of output property dimension.
                 Defaults to `1`.
             hidden_dim (int, optional): number of hidden layers.
-                Defaults to `128`.
+                Defaults to `256`.
             aggr (`"add"` or `"mean"`, optional): if set to `"add"`, sumaggregation
                 is done along node dimension. Defaults to `"add"`.
             residual (bool, optional): if `False`, no residual network.
                 Defaults to `True`.
+            batch_norm (bool, optional): if `False`, no batch normalization in
+                convolution layers. Defaults to `False`.
             edge_attr_dim (int, optional): number of edge attrbute dim.
                 Defaults to `None`.
             share_weight (bool, optional): if `True`, all convolution layers
@@ -77,6 +80,7 @@ class EGNN(nn.Module):
                         beta=swish_beta,
                         aggr=aggr,
                         residual=residual,
+                        batch_norm=batch_norm,
                     )
                     * n_conv_layer
                 ]
@@ -93,6 +97,7 @@ class EGNN(nn.Module):
                         beta=swish_beta,
                         aggr=aggr,
                         residual=residual,
+                        batch_norm=batch_norm,
                     )
                     for _ in range(n_conv_layer)
                 ]
@@ -133,12 +138,12 @@ class EGNN(nn.Module):
         edge_index = data_batch[DataKeys.Edge_index]
         edge_attr = data_batch.get(DataKeys.Edge_attr, None)
         # calc atomic distances
-        distances = self.calc_atomic_distances(data_batch)
+        distances_sq = torch.pow(self.calc_atomic_distances(data_batch), 2)
         # initial embedding
         x = self.node_initialize(atomic_numbers)
         # convolution
         for conv in self.convs:
-            x = conv(x, distances, edge_index, edge_attr)
+            x = conv(x, distances_sq, edge_index, edge_attr)
         # read out property
         x = self.output(x, batch)
         return x

@@ -4,8 +4,8 @@ from torch import Tensor
 import torch.nn as nn
 from torch_geometric.nn import global_add_pool, global_mean_pool
 
-from pygegnn.activation import Swish
-from pygegnn.base import Dense
+from pygegnn.nn.activation import Swish
+from pygegnn.nn.base import Dense
 
 
 __all__ = ["Node2Property"]
