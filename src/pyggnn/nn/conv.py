@@ -138,7 +138,7 @@ class EGNNConv(MessagePassing):
             assert (
                 cutoff_radi is not None
             ), "cutoff_radi must be set if cutoff_net is set"
-            self.cutoff_net(cutoff_radi)
+            self.cutoff_net = cutoff_net(cutoff_radi)
         self.residual = residual
         self.batch_norm = batch_norm
 
