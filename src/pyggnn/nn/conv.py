@@ -238,9 +238,7 @@ class EGNNConv(MessagePassing):
 
         # cutoff net
         if self.cutoff_net is not None:
-            print(edge_new.shape)
-            print(dist.shape)
-            edge_new = self.cutoff_net(dist) * edge_new
+            edge_new = self.cutoff_net(dist).unsqueeze(-1) * edge_new
         # get attention weight
         edge_new = self.atten(edge_new) * edge_new
 
