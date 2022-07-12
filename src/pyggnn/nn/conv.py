@@ -209,8 +209,6 @@ class EGNNConv(MessagePassing):
             edge_attr=edge_attr,
             size=None,
         )
-        if self.cutoff_net is not None:
-            edge = edge * self.cutoff_net(dist)
         out = torch.cat([x, edge], dim=-1)
         for nf in self.node_func:
             out = nf(out)
