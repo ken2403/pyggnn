@@ -37,7 +37,7 @@ class Node2Property(nn.Module):
         aggregation = {"add": global_add_pool, "mean": global_mean_pool}
         assert aggr == "add" or aggr == "mean"
         self.aggr = aggr
-        self.layers = nn.Sequential(
+        self.node_transform = nn.Sequential(
             Dense(in_dim, hidden_dim, bias=True),
             Swish(beta),
             Dense(hidden_dim, hidden_dim, bias=True),
@@ -50,6 +50,6 @@ class Node2Property(nn.Module):
         )
 
     def forward(self, x: Tensor, batch: Optional[Tensor] = None) -> Tensor:
-        out = self.layers(x)
+        out = self.node_transform(x)
         out = self.aggregate(out, batch=batch)
         return self.predict(out)
