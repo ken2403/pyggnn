@@ -99,6 +99,7 @@ class EGNNConv(MessagePassing):
         edge_hidden: int = 256,
         beta: Optional[float] = None,
         cutoff_net: Optional[nn.Module] = None,
+        cutoff_radi: Optional[float] = None,
         residual: bool = True,
         batch_norm: bool = False,
         aggr: Optional[str] = "add",
@@ -117,6 +118,7 @@ class EGNNConv(MessagePassing):
                 Defaults to `256`.
             beta (float or None, optional): beta coeff. Defaults to `None`.
             cutoff_net (nn.Module, optional): cutoff network. Defaults to `None`.
+            cutoff_radi (float, optional): cutoff radious. Defaults to `None`.
             residual (bool, optional): if set to `False`, no residual network is used.
                 Defaults to `True`.
             batch_norm (bool, optional): if set to `False`, no batch normalization is
@@ -130,7 +132,13 @@ class EGNNConv(MessagePassing):
         self.node_hidden = node_hidden
         self.edge_hidden = edge_hidden
         self.beta = beta
-        self.cutoff_net = cutoff_net
+        if cutoff_net is None:
+            self.cutoff_net = None
+        else:
+            assert (
+                cutoff_radi is not None
+            ), "cutoff_radi must be set if cutoff_net is set"
+            self.cutoff_net(cutoff_radi)
         self.residual = residual
         self.batch_norm = batch_norm
 
@@ -171,11 +179,6 @@ class EGNNConv(MessagePassing):
         self.atten = Dense(
             edge_dim, 1, bias=True, activation=torch.sigmoid, activation_name="sigmoid"
         )
-        # cutoff network
-        if cutoff_net is None:
-            self.cutoff = nn.Identity()
-        else:
-            self.cutoff = cutoff_net
         # batch normalization
         if batch_norm:
             self.bn = nn.BatchNorm1d(x_dim[1])
@@ -193,7 +196,7 @@ class EGNNConv(MessagePassing):
     def forward(
         self,
         x: Tensor,
-        dist_sq: Tensor,
+        dist: Tensor,
         edge_index: Adj,
         edge_attr: Optional[Tensor] = None,
     ) -> Tensor:
@@ -202,10 +205,12 @@ class EGNNConv(MessagePassing):
         edge = self.propagate(
             edge_index,
             x=x,
-            dist_sq=dist_sq,
+            dist=dist,
             edge_attr=edge_attr,
             size=None,
         )
+        if self.cutoff_net is not None:
+            edge = edge * self.cutoff_net(dist)
         out = torch.cat([x, edge], dim=-1)
         for nf in self.node_func:
             out = nf(out)
@@ -217,18 +222,23 @@ class EGNNConv(MessagePassing):
         self,
         x_i: Tensor,
         x_j: Tensor,
-        dist_sq: Tensor,
+        dist: Tensor,
         edge_attr: Optional[Tensor],
     ) -> Tensor:
         # update edge
         if edge_attr is None:
-            edge_new = torch.cat([x_i, x_j, dist_sq.unsqueeze(-1)], dim=-1)
+            edge_new = torch.cat([x_i, x_j, torch.pow(dist, 2).unsqueeze(-1)], dim=-1)
         else:
             assert edge_attr.size[-1] == self.edge_attr_dim
-            edge_new = torch.cat([x_i, x_j, dist_sq.unsqueeze(-1), edge_attr], dim=-1)
+            edge_new = torch.cat(
+                [x_i, x_j, torch.pow(dist, 2).unsqueeze(-1), edge_attr], dim=-1
+            )
         for ef in self.edge_func:
             edge_new = ef(edge_new)
 
+        # cutoff net
+        if self.cutoff_net is not None:
+            edge_new = self.cutoff_net(dist) * edge_new
         # get attention weight
         edge_new = self.atten(edge_new) * edge_new
 
